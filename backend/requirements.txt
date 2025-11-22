@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+python-multipart
+anthropic
+groq
+google-generativeai
+easyocr
+Pillow
+numpy
+duckduckgo-search
+httpx

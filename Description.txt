@@ -1,0 +1,66 @@
+Halo Trace
+"Trace LinkedIn profiles effortlessly with smart image recognition."
+
+Problem Statement
+Networking and lead discovery at conferences, events, and fairs often requires manually searching for the LinkedIn profiles of companies and people featured on posters or flyers. This process is tedious, error-prone, and time-consuming.
+
+Proposed Solution
+Develop an AI-powered web application that allows users to upload photos of posters containing multiple company names and/or people. The app automatically extracts the names using Optical Character Recognition (OCR) and returns verified LinkedIn profile URLs by querying search engines based on the extracted text and user-selected tags.
+
+Key Features
+Image Upload & Processing: Users submit poster images containing company/person names.
+
+OCR Text Extraction: Employ open-source OCR tools like Tesseract.js (frontend) or EasyOCR (backend) to convert images to text.
+
+Tag-based Context Selection: Users choose from tags such as "Companies," "People," "Jobs", or "Posts" to guide search context.
+
+LinkedIn URL Retrieval: Using extracted names and tags, the backend performs targeted Google Custom Search API queries with patterns like "Name site:linkedin.com".
+
+Results Display: Clean user interface that organizes and shows clickable LinkedIn URLs for all matched profiles or company pages.
+
+Free and Scalable: The solution leverages free-tier services and open-source tools for cost-effective deployment and easy scaling.
+
+Technical Architecture
+Frontend
+Built with Next.js for smooth user experience on image upload, tag selection, and result rendering.
+
+Tesseract.js integration possible for quick OCR processing on the client side.
+
+Backend
+Python-based API (FastAPI or Flask) that accepts uploaded images, performs backend OCR (EasyOCR), and manages search queries.
+
+Calls Google Custom Search API to find LinkedIn URLs using formatted search queries corresponding to user tags and extracted names.
+
+APIs and Services
+Google Custom Search API: To retrieve LinkedIn profile URLs without scraping.
+
+Optional Open-source face recognition if images of people require enhanced matching.
+
+Deployment
+Frontend hosted on Vercel (free-tier) with continuous deployment from GitHub.
+
+Backend hosted on platforms like Railway, Render, or Glitch with free-tier plans.
+
+Code repository open-source on GitHub for collaboration.
+
+Workflow Summary
+User uploads a poster image on the web app.
+
+OCR extracts text — company names or person names.
+
+User selects relevant tag to specify a search context.
+
+Backend formats search queries with "extracted_name site:linkedin.com" strings.
+
+Google Custom Search API returns the top LinkedIn URL match for each name.
+
+URLs are aggregated and displayed on the frontend as clickable links.
+
+Impact and Benefits
+Streamlines LinkedIn profile discovery from real-world sources quickly and accurately.
+
+Saves time for recruiters, event attendees, business networking professionals, and job seekers.
+
+Fully compliant with LinkedIn’s policies by avoiding scraping.
+
+Easily adaptable and extensible for different search contexts or social platforms.
