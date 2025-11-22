@@ -210,7 +210,7 @@ function App() {
           </div>
 
           <footer>
-            <p>Powered by <a href="https://www.anthropic.com" target="_blank" rel="noopener noreferrer">Claude AI</a> &middot; Built for Hackathon 2024</p>
+            <p>Powered by <a href="https://ai.google.dev" target="_blank" rel="noopener noreferrer">Google Gemini AI</a></p>
           </footer>
         </div>
       </div>
@@ -351,7 +351,7 @@ function App() {
           </main>
 
           <footer>
-            <p>Powered by <a href="https://www.anthropic.com" target="_blank" rel="noopener noreferrer">Claude AI</a></p>
+            <p>Powered by <a href="https://ai.google.dev" target="_blank" rel="noopener noreferrer">Google Gemini AI</a></p>
           </footer>
         </div>
       </div>
@@ -453,7 +453,7 @@ function App() {
           </main>
 
           <footer>
-            <p>Powered by <a href="https://www.anthropic.com" target="_blank" rel="noopener noreferrer">Claude AI</a></p>
+            <p>Powered by <a href="https://ai.google.dev" target="_blank" rel="noopener noreferrer">Google Gemini AI</a></p>
           </footer>
         </div>
       </div>
