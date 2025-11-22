@@ -122,5 +122,4 @@ MIT
 
 ## Acknowledgments
 
-- Built for Hackathon 2024
 - Powered by Google Gemini AI
