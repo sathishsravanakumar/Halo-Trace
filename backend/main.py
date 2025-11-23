@@ -72,10 +72,13 @@ def find_linkedin_profile(name: str, tag: str) -> dict:
                 f'"{name}" site:linkedin.com'
             ]
         else:
-            # Multiple search strategies for people
+            # Multiple search strategies for people - more comprehensive
             search_queries = [
                 f'site:linkedin.com/in "{name}"',
-                f'{name} linkedin profile'
+                f'"{name}" linkedin profile',
+                f'{name} linkedin',
+                f'"{name}" site:linkedin.com/in',
+                f'{name} professional linkedin'
             ]
 
         # Try each search query
@@ -264,6 +267,87 @@ def validate_company_names(names: List[str]) -> List[str]:
     return validated
 
 
+def validate_person_names(names: List[str]) -> List[str]:
+    """Filter out misidentified or invalid person names."""
+    # Common invalid patterns for person names
+    invalid_patterns = [
+        'Unknown', 'Speaker', 'Presenter', 'Author', 'Guest',
+        'Moderator', 'Panelist', 'Host', 'CEO', 'CTO', 'CFO',
+        'Manager', 'Director', 'President', 'Chairman', 'Founder',
+        'Name', 'Person', 'User', 'Member', 'Participant',
+        'Dr', 'Mr', 'Mrs', 'Ms', 'Prof', 'Sir', 'Madam',
+        'TBD', 'TBA', 'N/A', 'NA', 'Anonymous',
+    ]
+
+    # Common words that shouldn't be names
+    common_words = {
+        'the', 'and', 'for', 'with', 'from', 'about', 'this', 'that',
+        'team', 'group', 'company', 'organization', 'department',
+        'click', 'here', 'more', 'info', 'read', 'view', 'see',
+        'linkedin', 'facebook', 'twitter', 'instagram', 'email',
+        'contact', 'website', 'profile', 'page', 'link',
+        'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december',
+        'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+    }
+
+    validated = []
+    seen = set()
+
+    for name in names:
+        name = name.strip()
+
+        # Skip empty or very short names
+        if len(name) < 3:
+            continue
+
+        # Skip single word names (need at least first and last name)
+        words = name.split()
+        if len(words) < 2:
+            continue
+
+        # Skip if more than 5 words (likely a sentence, not a name)
+        if len(words) > 5:
+            continue
+
+        # Skip names that are just numbers or symbols
+        if all(not c.isalpha() for c in name):
+            continue
+
+        # Skip names with too many special characters
+        special_count = sum(1 for c in name if not c.isalnum() and c not in ' .-\'')
+        if special_count > 2:
+            continue
+
+        # Skip invalid patterns
+        name_upper = name.upper()
+        if any(pattern.upper() == name_upper for pattern in invalid_patterns):
+            continue
+
+        # Skip if any word is a common non-name word
+        name_words_lower = [w.lower() for w in words]
+        if any(word in common_words for word in name_words_lower):
+            continue
+
+        # Skip if it looks like a title without a name
+        if words[0].lower() in ['dr', 'mr', 'mrs', 'ms', 'prof', 'sir'] and len(words) == 1:
+            continue
+
+        # Skip names that are all uppercase or all lowercase (likely OCR errors)
+        # Unless it's a short name (2 words)
+        if len(words) > 2 and (name.isupper() or name.islower()):
+            continue
+
+        # Normalize to avoid duplicates
+        name_lower = name.lower()
+        if name_lower not in seen:
+            seen.add(name_lower)
+            # Capitalize properly
+            validated.append(' '.join(word.capitalize() for word in words))
+
+    return validated
+
+
 def analyze_image_with_gemini(image_data: bytes, tag: str) -> List[dict]:
     """Use Google's Gemini Vision API to analyze images and get LinkedIn URLs."""
     api_key = os.getenv('GEMINI_API_KEY')
@@ -278,7 +362,45 @@ def analyze_image_with_gemini(image_data: bytes, tag: str) -> List[dict]:
         # Create image part
         img = Image.open(io.BytesIO(image_data))
 
-        prompt = """You are an expert visual research assistant. Your goal is to accurately identify entities in images and extract their professional online presence.
+        if tag == 'people':
+            prompt = """You are an expert visual research assistant specializing in identifying people from images.
+
+**Your Task:** Identify all people visible or mentioned in this image and find their LinkedIn profiles.
+
+**Where to Look for People:**
+1. **Faces in photos** - Identify well-known public figures, speakers, executives, or celebrities
+2. **Name badges or labels** - Text identifying people (e.g., "John Smith, CEO")
+3. **Speaker/presenter lists** - Conference agendas, event programs, webinar panels
+4. **Author credits** - Article bylines, book covers, presentation slides
+5. **Team pages** - Company about pages, organizational charts
+6. **Social media posts** - Screenshots showing usernames or profile names
+7. **Business cards** - Contact information images
+8. **Award/recognition lists** - Names of winners, nominees, honorees
+
+**Your Process:**
+1. Scan the entire image for any person names or identifiable faces
+2. For each person found, extract their FULL NAME (First and Last name minimum)
+3. If you recognize a famous person by face, identify them
+4. Predict their most likely LinkedIn profile URL based on name
+
+**Critical Rules:**
+- Only include names you are CONFIDENT about
+- Must have at least first AND last name (e.g., "John Smith" not just "John")
+- For common names, include any additional context visible (title, company) to help search
+- If you see a face but cannot identify who it is, skip it
+- Do NOT include fictional characters, stock photo models, or generic placeholder names
+
+**Output Format (JSON only, no markdown):**
+[
+  {
+    "name": "Full Person Name",
+    "linkedin_url": "https://www.linkedin.com/in/predicted-slug"
+  }
+]
+
+If no people can be identified, return: []"""
+        else:
+            prompt = """You are an expert visual research assistant. Your goal is to accurately identify entities in images and extract their professional online presence.
 
 **Your Process:**
 1. **Analyze the image thoroughly.** Look for logos, brand names, stylized text, or recognizable people.
@@ -721,9 +843,12 @@ async def extract_text(
                 if name:
                     final_names.append(name)
 
-            # Apply validation for companies
+            # Apply validation based on tag
             if tag == 'companies':
                 validated_names = validate_company_names(final_names)
+                final_names = validated_names
+            else:
+                validated_names = validate_person_names(final_names)
                 final_names = validated_names
 
             # Search for actual LinkedIn URLs using DuckDuckGo
@@ -765,9 +890,11 @@ async def extract_text(
                 seen.add(name_lower)
                 unique_names.append(name.strip())
 
-        # Apply validation for companies
+        # Apply validation based on tag
         if tag == 'companies':
             unique_names = validate_company_names(unique_names)
+        else:
+            unique_names = validate_person_names(unique_names)
 
         # Limit to 20 names
         final_names = unique_names[:20]
